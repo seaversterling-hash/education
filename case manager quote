@@ -1,0 +1,1722 @@
+import React, { useState, useMemo, useEffect, useCallback, createContext, useContext } from 'react';
+
+// --- Data ---
+const initialStudentsData = [
+    {
+        id: 1,
+        firstName: 'Adrian',
+        lastName: 'Aguilar',
+        grade: 9,
+        iepDueDate: '2026-03-26',
+        notes: [],
+        accommodations: [
+            { id: 'adrian-acc-1', text: 'Flexible seating to ensure auditory and visual access', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-2', text: 'Directions provided in a variety of ways: verbal, Gestural, model to support student expectations.', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-3', text: 'Language scaffolds, modified language to match the level of Adrian\'s, so that he can understand what is expected of him.', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-4', text: 'Sentence/paragraph frames when constructing sentences or paragraphs with the intent to construct essays.', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-5', text: 'Multiplication table when working with math that requires him to multiply.', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-6', text: 'Allow student think time before answering questions during discussions.', complexity: 'standard', usage: [] },
+            { id: 'adrian-acc-7', text: 'Student has low self-esteem when engaged in academics, please use positive messaging when engaging students to participate or answering questions.', complexity: 'complex', usage: [] },
+            { id: 'adrian-acc-8', text: 'Adrian struggles with requesting help, please do an assignment check in to make sure he understands what is expected of him.', complexity: 'complex', usage: [] },
+            { id: 'adrian-acc-9', text: 'Allowed one assessment retake after studying missed concepts', complexity: 'standard', usage: [] },
+        ],
+        goals: [
+            { id: 'adrian-1', area: 'Reading', metricType: 'percentage', text: 'By the next annual review on March 26, 2026, Adrian will be able to answer 10 comprehension questions with at least 80% accuracy in 3 out of 4 trials after reading a 250-350 word passage at his instructional level.', baseline: 'N/A', measurement: 'Student work samples.', progress: [{ date: '2025-08-01', score: '70%', notes: 'Getting better.'},{ date: '2025-08-08', score: '75%', notes: 'Good effort.'}] },
+            { id: 'adrian-2', area: 'Reading Fluency', metricType: 'duration', text: 'By the next annual review on March 26, 2026, when reading instructional level passages aloud, Adrian will focus on reading with appropriate pauses and emphasis based on punctuation marks (commas, periods, question marks) to improve clarity with 80% accuracy in 3 out of 4 trials.', baseline: 'N/A', measurement: 'Teacher observations.', progress: [{ date: '2025-08-01', score: '60', notes: 'Rushed.'}] },
+            { id: 'adrian-3', area: 'Mathematics', metricType: 'percentage', text: 'By the next annual review on March 26, 2026, when given 10 multi-step word problems involving multiplication and division, Adrian will be able to solve them with at least 80% accuracy in 3 out of 4 trials.', baseline: 'N/A', measurement: 'Student work samples.', progress: [{ date: '2025-08-05', score: '95%', notes: 'Excellent work!'}] },
+            { id: 'adrian-4', area: 'Behavior', metricType: 'frequency', text: 'By the next annual review on March 26, 2026, after the teacher has presented the lesson and all questions are answered, Adrian will begin the assignment. If he still needs a break, he will ask politely to take a break with 80% accuracy in 3 out of 4 trials.', baseline: 'N/A', measurement: 'Teacher observations.', progress: [] },
+        ],
+    },
+    {
+        id: 2,
+        firstName: 'Jake',
+        lastName: 'Alfaro',
+        grade: 9,
+        iepDueDate: '2025-12-11',
+        notes: [],
+        accommodations: [
+            { id: 'jake-acc-1', text: 'Visual of daily schedule and/or assignments', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-2', text: 'Preferential seating', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-3', text: 'Language scaffolds', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-4', text: 'Provide extra thinking time', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-5', text: 'Paragraph templates as needed', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-6', text: 'Read Aloud (Reading Passages)', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-7', text: 'Small group for reading and writing', complexity: 'complex', usage: [] },
+            { id: 'jake-acc-8', text: 'Read and write for Google Chrome', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-9', text: 'Extended time', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-10', text: 'Multiple or frequent breaks', complexity: 'standard', usage: [] },
+            { id: 'jake-acc-11', text: 'Frequent check-ins for understanding', complexity: 'complex', usage: [] },
+            { id: 'jake-acc-12', text: 'Check in with Math to see if he needs support', complexity: 'complex', usage: [] },
+        ],
+        goals: [
+            { id: 'jake-1', area: 'Communication', metricType: 'percentage', text: 'By December 11, 2025, Jake will produce the following sounds with 90% accuracy or higher during conversation: w, sh, ch, j, s, and syllable-final l, given occasional reminders.', baseline: 'Inconsistent errors on these sounds in conversation, with /r/ at 90% accuracy and /s/ at 67% accuracy, and a tendency to rhotacize /l/ and /w/ and produce /s/ with a frontal lisp.', measurement: 'SLP data.', progress: [] },
+            { id: 'jake-2', area: 'Behavior', metricType: 'rubric', text: 'By the next annual review, when Jake feels the urge to speak out, he will wait until the teacher is finished talking or raise his hand and wait to be called upon before speaking out in all of his classes with at least 85% accuracy.', baseline: 'Struggles to raise his hand to talk in Science.', measurement: 'Teacher observation.', progress: [] },
+            { id: 'jake-3', area: 'Reading', metricType: 'percentage', text: 'By the next annual review in 2025, when given a passage at his instructional level, Jake will read it at a conversational rate without omitting any letters or words in 3/4 trials with at least 80% accuracy.', baseline: 'Tends to rush through his reading, causing him to omit letters and words.', measurement: 'Teacher observations.', progress: [] },
+            { id: 'jake-4', area: 'Writing', metricType: 'notes', text: 'By the next annual review, before submitting any writing assignments, Jake will proof-read all work before turning in. The work will be clear of any errors in punctuation, grammar, spelling and will have the correct syntax in at least 3/4 assignments and have at least 85% accuracy.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+        ],
+    },
+    {
+        id: 3,
+        firstName: 'Jamil',
+        lastName: 'Beltran',
+        grade: 9,
+        iepDueDate: '2026-05-08',
+        notes: [],
+        accommodations: [
+            { id: 'jamil-acc-1', text: 'Flexible seating to ensure auditory and visual access', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-2', text: 'Directions provided in a variety of ways: verbal, Gestural, model to support student expectations.', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-3', text: 'Language scaffolds, modified language to match the level of Jamil\'s, so that he can understand what is expected of him', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-4', text: 'Sentence/paragraph frames when constructing sentences or paragraphs with the intent to construct essays', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-5', text: 'Multiplication table or calculator when working with math that requires him to multiply', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-6', text: 'Extra time on tests and assignments (5 additional school days beyond the due date)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-7', text: 'Shortened assignments and assessments (as needed)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-8', text: 'Notes, outlines and instructions', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-9', text: 'Check for understanding by having student restate or paraphrase information', complexity: 'complex', usage: [] },
+            { id: 'jamil-acc-10', text: 'Text-to-Speech (Reading Passages)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-11', text: 'Use of Graphic Calculator on assessments', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-12', text: 'Graphic organizer', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-13', text: 'Visual organizers', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-14', text: 'Extended time on assignments/assessments (as appropriate)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-15', text: 'Task Completion checklist', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-16', text: 'Allow Private Oral Presentation in lieu of written essay as appropriate.', complexity: 'complex', usage: [] },
+            { id: 'jamil-acc-17', text: 'Separate setting for testing as appropriate', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-18', text: 'Student-made reference card/paper allowed on assessments', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-19', text: 'One retake on failed assessments (as needed)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-20', text: 'Define unfamiliar words on assignments/assessments (as needed)', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-21', text: 'Spelling Supports', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-22', text: 'Sentence starters/ Sentence Frames', complexity: 'standard', usage: [] },
+            { id: 'jamil-acc-23', text: 'Avoid (solo) presentations to the entire class (as needed)', complexity: 'complex', usage: [] },
+        ],
+        goals: [
+            { id: 'jamil-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review May 8th 2026, when given a grade-level passage, Jamil will read aloud with at least 140 correct words per minute (CWPM) with no more than 3 errors, as measured by curriculum-based measures and teacher observations on three consecutive trials with at least 80% accuracy.', baseline: 'N/A', measurement: 'Curriculum-based measures and teacher observations.', progress: [] },
+            { id: 'jamil-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review May 8th, 2026, After reading a 350-450 word passage at grade level, Jamil will be able to answer 10 comprehension questions with at least 80% accuracy in 3/4 trials.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+            { id: 'jamil-3', area: 'Math Calculation', metricType: 'percentage', text: 'By next annual review May 8th 2026, given grade-level math problems and appropriate supports, Jamil will solve at least 20 single- and multi-digit computation problems (including addition, subtraction, multiplication, and division) with 80% accuracy, in under 3 minutes in 4 out of 5 trials.', baseline: 'N/A', measurement: 'Teacher-made assessments or curriculum-based tools.', progress: [] },
+            { id: 'jamil-4', area: 'Math Comprehension', metricType: 'percentage', text: 'By next annual review May 8th 2026, when given multi step word problems involving time, measurement and volume, Jamil will solve them with at least 80% accuracy in 3/4 trials.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+            { id: 'jamil-5', area: 'Executive Functioning', metricType: 'percentage', text: 'By next annual review May 8th 2026, Jamil will use a planner, checklist, or digital tool to track assignments and due dates, completing at least 80% of tasks on time with minimal teacher prompting in 3/4 assignments.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+            { id: 'jamil-6', area: 'Spelling', metricType: 'percentage', text: 'By the next annual review May 8th, 2026, when given a weekly list of 10 grade-level spelling words, Jamil will spell at least 8 out of 10 words correctly in writing tasks or spelling assessments in 3 out of 4 trials.', baseline: 'N/A', measurement: 'Student work samples and teacher records.', progress: [] },
+        ],
+    },
+    {
+        id: 4,
+        firstName: 'Destiny',
+        lastName: 'Delgado',
+        grade: 9,
+        iepDueDate: '2026-05-01',
+        notes: [],
+        accommodations: [
+            { id: 'destiny-acc-1', text: 'Flexible seating to ensure auditory and visual access, close to the point of instruction and any visual components.', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education classroom/public school site' },
+            { id: 'destiny-acc-2', text: 'Directions provided in a variety of ways: verbal, Gestural, model to support student expectations.', startDate: '2025-05-02', endDate: '2025-05-01', location: 'General education classroom/public school site' },
+            { id: 'destiny-acc-3', text: 'Multiplication table or calculator when working with math that requires her to multiply or divide', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education classroom/public school site' },
+            { id: 'destiny-acc-4', text: 'Extra time on tests and assignments', startDate: '2025-05-02', endDate: '2025-05-01', location: 'General education classroom/public school site' },
+            { id: 'destiny-acc-5', text: 'Testing in a separate setting', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education and separate setting' },
+            { id: 'destiny-acc-6', text: 'Teacher generated notes available for assessments', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education and separate setting' },
+            { id: 'destiny-acc-7', text: 'Assesssments with steps written out for math and science problems.', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education and separate setting' },
+            { id: 'destiny-acc-8', text: 'Weekly check ins with education specialist to review grades including missing assignments and upcoming assignments and assessments.', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education and separate setting' },
+            { id: 'destiny-acc-9', text: 'Parent access to google classroom.', startDate: '2025-05-02', endDate: '2026-05-01', location: 'General education and separate setting' },
+        ],
+        goals: [
+            { id: 'destiny-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By May 1st, 2026, when given a grade-level passage, Destiny will read aloud with at least 140 correct words per minute (CWPM) with no more than 3 errors. This will be measured by curriculum-based measures and teacher observations on three consecutive trials with at least 80% accuracy.', baseline: 'N/A', measurement: 'Curriculum-based measures and teacher observations.', progress: [] },
+            { id: 'destiny-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By May 1st, 2026, after reading a 350-450 word passage at grade level, Destiny will be able to answer 10 comprehension questions with at least 80% accuracy in 3 out of 4 trials.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+            { id: 'destiny-3', area: 'Mathematics', metricType: 'percentage', text: 'By May 1st, 2026, when given ten double-digit division/multiplication problems and a multiplication chart, Destiny will solve them with at least 80% accuracy on 3 out of 4 trials.', baseline: 'N/A', measurement: 'Student work samples.', progress: [] },
+        ],
+    },
+    {
+        id: 5,
+        firstName: 'Jacob',
+        lastName: 'Fernandez',
+        grade: 9,
+        iepDueDate: '2026-03-17',
+        notes: [],
+        accommodations: [
+            { id: 'jacob-acc-1', text: 'Reduce distractions to the student', startDate: '2025-03-18', endDate: '2026-03-17', location: 'General education classroom/public school site' },
+            { id: 'jacob-acc-2', text: 'extended time on assignments and assessments', startDate: '2025-03-18', endDate: '2026-03-17', location: 'General education classroom/public school site' },
+            { id: 'jacob-acc-3', text: 'Multiple or frequent breaks', startDate: '2025-03-18', endDate: '2026-03-17', location: 'General education classroom/public school site' },
+            { id: 'jacob-acc-4', text: 'Deescalation routine when feeling frustrated', startDate: '2025-03-18', endDate: '2026-03-17', location: 'General education classroom/public school site' },
+            { id: 'jacob-acc-5', text: 'Peer buddy that\'s a positive role model', startDate: '2025-03-18', endDate: '2026-03-17', location: 'General education classroom/public school site' },
+            { id: 'jacob-acc-6', text: 'opportunity for assessment retakes', startDate: '2025-05-22', endDate: '2026-03-17', location: 'General Education Class/Charter School' },
+            { id: 'jacob-acc-7', text: 'opportunity for separate setting for assessments', startDate: '2025-05-22', endDate: '2026-03-17', location: 'General Education Class/Charter School' },
+            { id: 'jacob-acc-8', text: 'access to notecard on assessments', startDate: '2025-05-22', endDate: '2026-03-17', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'jacob-1', area: 'Behavior', metricType: 'percentage', text: 'By the next annual review on March 17, 2026, after the lesson instruction is given by the teacher, Jacob will begin the task with no more than one request from the teacher or instructional aide with at least 90% accuracy in 3 out of 4 trials.', baseline: 'Typically needs at least one reminder to start his work because he enjoys socializing with classmates.', measurement: 'Teacher observation.', progress: [] },
+            { id: 'jacob-2', area: 'Executive Functioning', metricType: 'percentage', text: 'By the next annual review in 2026, Jacob will use a planner, checklist, or digital tool to track assignments and due dates, completing at least 80% of tasks on time with minimal teacher prompting.', baseline: 'Tends to be disorganized in general (e.g., messy backpack) and when submitting assignments (e.g., missing due dates, stapling papers upside down).', measurement: 'Student work samples and teacher observations.', progress: [] },
+        ],
+    },
+    { 
+        id: 6, 
+        firstName: 'Juliette', 
+        lastName: 'Franco', 
+        grade: 9, 
+        iepDueDate: '2025-09-29', 
+        notes: [],
+        accommodations: [
+            { id: 'juliette-acc-1', text: 'Preferential seating', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-2', text: 'Visual Cues', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-3', text: 'Prompts to check for understanding and attention to instruction', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-4', text: 'Shortened Assignments', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-5', text: 'Extended time to complete assignments and assessments', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-6', text: 'Directions given in a variety of ways, repeated directions, simplified directions', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-7', text: 'Access calculator', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-8', text: 'Speech to text', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-9', text: 'Copies of teacher notes', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-10', text: 'Access to fidget during class.', startDate: '2024-09-30', endDate: '2025-09-29', location: 'General Education Class/Charter School' },
+            { id: 'juliette-acc-11', text: 'Allowed one assessment retake as needed after studying missed concepts.', startDate: '2024-10-04', endDate: '2025-09-29', location: 'General Education classroom/ public school site' },
+            { id: 'juliette-acc-12', text: 'Access to separate setting for assessments', startDate: '2025-05-13', endDate: '2025-09-29', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'juliette-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review 2025, Juliette will increase her fluency by reading simple sentences containing sight words and familiar vocabulary with accuracy and expression, achieving a rate of at least 10 correct words per minute in 3/4 trials as measured by teacher observations.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+            { id: 'juliette-2', area: 'Written Expression', metricType: 'percentage', text: 'By next annual review 2025, when given a topic of choice, Juliette will be able to write at least 100-150 word passages with full sentences that include details relating to the topic sentence and written in the RACE format. Her passage will also have correct punctuation and spelling. The entire passage will be written with at least 85% accuracy in punctuation and spelling and will have at least 3 detailed sentences that support her topic sentences in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'juliette-3', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review 2025, when given multi step word problems, Juliette will solve them with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'juliette-4', area: 'Behavior', metricType: 'percentage', text: 'By next annual review 2025, after the instructions are given and Juliette is confused on what to do, she will raise her hand or ask for clarification in 2/3 classes as measured by teacher observation.', baseline: 'N/A', measurement: 'Teacher observation', progress: [] },
+        ] 
+    },
+    { id: 7, firstName: 'Patrick', lastName: 'Franklin', grade: 9, iepDueDate: '', notes: [], accommodations: [], goals: [] },
+    { 
+        id: 8, 
+        firstName: 'Eben', 
+        lastName: 'Gutierrez Jimenez', 
+        grade: 9, 
+        iepDueDate: '2026-03-24', 
+        notes: [],
+        accommodations: [
+            { id: 'eben-acc-1', text: 'preferential seating away from distractions', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom/ public school site' },
+            { id: 'eben-acc-2', text: 'Visual supports, word banks, sentence / paragraph frames for writing, and the use of graphic organizers for gathering information in one place.', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom/ public school site' },
+            { id: 'eben-acc-3', text: 'Increased verbal response time', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom/ public school site' },
+            { id: 'eben-acc-4', text: 'Allowed one assessment retake as needed after studying missed concepts.', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General education classroom/public school site' },
+            { id: 'eben-acc-5', text: 'Periodic check-ins for understanding including repeated and/or simplified directions', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom / public school site' },
+            { id: 'eben-acc-6', text: 'Provide directions in a variety of modalities', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom / public school site' },
+            { id: 'eben-acc-7', text: 'Obtain student’s attention before speaking', startDate: '2025-03-25', endDate: '2026-03-24', location: 'General Education classroom / public school site' },
+            { id: 'eben-acc-8', text: 'Opportunity to take assessments in a separate setting', startDate: '2025-05-22', endDate: '2026-03-24', location: 'General Education Class/Charter School' },
+            { id: 'eben-acc-9', text: 'Extended time for assignments and assessments', startDate: '2025-05-22', endDate: '2026-03-24', location: 'General Education Class/Charter School' },
+            { id: 'eben-acc-10', text: 'Note card for assessments', startDate: '2025-05-22', endDate: '2026-03-24', location: 'General Education Class/Charter School' },
+            { id: 'eben-acc-11', text: 'structured breaks', startDate: '2025-05-22', endDate: '2026-03-24', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'eben-1', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review March 2026, Eben will demonstrate improved reading comprehension by summarizing a story at his instructional level in writing using sequential order (beginning, middle, end) with at least four sentences and written with correct punctuation and capitalization in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'eben-2', area: 'Communication', metricType: 'notes', text: 'By 3/24/2026, Eben will complete the following tasks: a) rank speaking situations and emotions from easiest to hardest, b) identify three ways to respond to stuttering-related teasing, c) rank self-disclosure statements and situations from easiest to hardest, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'eben-3', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review March 2026, when given multi-step word problems involving money and decimals, like calculating interest earned on a savings account over multiple years, Eben will be able to solve with at least 80% accuracy in 3/4 trials as observed from student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+        ] 
+    },
+    { 
+        id: 9, 
+        firstName: 'Raiden', 
+        lastName: 'Jorge', 
+        grade: 9, 
+        iepDueDate: '2026-02-12', 
+        notes: [],
+        accommodations: [
+            { id: 'raiden-acc-1', text: 'Frequent Breaks', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-2', text: 'Access to formulas', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-3', text: 'Masking/Chunking Information', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-4', text: 'Extended Time on assignments and tests (50% more time)', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-5', text: 'Allow use of Calculator', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-6', text: 'Speech-to-Text for written assignments', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-7', text: 'Flexible seating to ensure auditory and visual access', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-8', text: 'Access to formula charts, multiplication chart, calculator', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-9', text: 'Graphic Organizers', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-10', text: 'access to word processing program, spell check, word prediction and text to speech for writing tasks', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-11', text: 'multiple choice questions for quizzes and tests if appropriate to meet standard (teacher discretion)', startDate: '2025-02-13', endDate: '2026-02-12', location: 'Classroom' },
+            { id: 'raiden-acc-12', text: 'Allowed one assessment retake as needed after studying missed concepts.', startDate: '2025-02-13', endDate: '2026-02-12', location: 'General Education classroom/ public school site' },
+            { id: 'raiden-acc-13', text: 'opportunity for separate setting assessments', startDate: '2025-05-22', endDate: '2026-02-12', location: 'General Education Class/Charter School' },
+            { id: 'raiden-acc-14', text: 'opportunity to use notecard on assessments', startDate: '2025-05-22', endDate: '2026-02-12', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'raiden-1', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review Feb 2, 2026, After reading a 350-450 word passage at grade level, Raiden will be able to answer 10 comprehension questions with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'raiden-2', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review Feb 12 2026, when reading grade level or higher passages aloud, Raiden will focus on reading with appropriate pauses and emphasis based on punctuation marks (commas, periods, question marks) to improve clarity with 80% accuracy in 3/4 trials as measured by teacher observations.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+            { id: 'raiden-3', area: 'Written Expression', metricType: 'percentage', text: 'By next annual review Feb 12 2026, when given a copy of a self-generated sentences containing 3-5 errors in spelling, punctuation, and capitalization. Raiden will employ editing strategies (spellcheck, re-examining misspelled words by sounding them out, reading sentence aloud) in order to correct at least 80% of given errors in 2/3 trials over two consecutive weeks as measured by student work samples and teacher observation.', baseline: 'N/A', measurement: 'Student work samples and teacher observation', progress: [] },
+            { id: 'raiden-4', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review Feb 12 2026, when given worksheets with mixed orders of operations, Raiden will complete them with at least 80% accuracy in 3/4 trials as measured by student work samples and teacher collected data.', baseline: 'N/A', measurement: 'Student work samples and teacher collected data', progress: [] },
+            { id: 'raiden-5', area: 'Behavior', metricType: 'percentage', text: 'By next annual review Feb 12 2026, Raiden will stay on task for at least 15-minute work sessions with no more than one redirection in 80% of observed instances, as measured by teacher observations.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 10, 
+        firstName: 'Re\'Mani', 
+        lastName: 'Owens', 
+        grade: 9, 
+        iepDueDate: '2026-04-24', 
+        notes: [],
+        accommodations: [],
+        goals: [
+            { id: 'remani-1', area: 'Reading Comprehension', metricType: 'percentage', text: "By next annual review April 24th, 2026, After reading a 350-450 word passage at grade level, Re'Mani will be able to answer 10 comprehension questions with at least 80% accuracy in 3/4 trials as measured by student work samples.", baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'remani-2', area: 'Mathematics', metricType: 'percentage', text: "By next annual review April 24th, 2026, given grade-level math problems and appropriate supports, Re'Mani will solve at least 20 single- and multi-digit computation problems (including addition, subtraction, multiplication, and division) with 80% accuracy, in under 3 minutes in 4 out of 5 trials, as measured by teacher-made assessments or curriculum-based tools.", baseline: 'N/A', measurement: 'Teacher-made assessments or curriculum-based tools', progress: [] },
+        ] 
+    },
+    { 
+        id: 11, 
+        firstName: 'Malachi', 
+        lastName: 'Pope', 
+        grade: 9, 
+        iepDueDate: '2025-01-31', 
+        notes: [],
+        accommodations: [
+            { id: 'pope-acc-1', text: 'preferential seating, close proximity to teacher and/or lesson being presented', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-2', text: 'provide paragraph templates for writing', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-3', text: 'example of completed math problems', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-4', text: 'check for understanding', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-5', text: 'Small group for writing', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-6', text: 'small group for math', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-7', text: 'Extended time', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-8', text: 'Pair with strong language models', startDate: '2025-01-07', endDate: '2026-01-06', location: 'regular classroom/public day school' },
+            { id: 'pope-acc-9', text: 'Ask clarifying questions when Malachi uses vague/imprecise vocabulary', startDate: '2025-01-07', endDate: '2026-01-06', location: 'Across Settings' },
+            { id: 'pope-acc-10', text: 'Shorten, simplify, and repeat directions and instructions', startDate: '2025-01-07', endDate: '2026-01-06', location: 'Across Settings' },
+            { id: 'pope-acc-11', text: 'Frequent comprehension checks by asking for repetition, retell, or summaries', startDate: '2025-01-07', endDate: '2026-01-06', location: 'Across Settings' },
+            { id: 'pope-acc-12', text: 'Verbal Sentence Frames', startDate: '2025-01-07', endDate: '2026-01-06', location: 'Across Settings' },
+            { id: 'pope-acc-13', text: 'Recast grammatically incorrect sentences', startDate: '2025-01-07', endDate: '2026-01-06', location: 'Across Settings' },
+        ],
+        goals: [
+            { id: 'malachi-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review 2025, Malachi will increase his fluency by reading simple sentences containing sight words and familiar vocabulary with accuracy and expression, achieving a rate of at least 10 correct words per minute with at least 80% accuracy in 3/4 trials as measured by teacher observation.', baseline: 'N/A', measurement: 'Teacher observation', progress: [] },
+            { id: 'malachi-2', area: 'Written Expression', metricType: 'percentage', text: 'By next annual review 2025, Malachi will produce a paragraph with a clear topic sentence and at least three detailed supporting sentences in ¾ trials and with at least 80% accuracy as measured by student work samples and teacher observation.', baseline: 'N/A', measurement: 'Student work samples and teacher observation', progress: [] },
+            { id: 'malachi-3', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review 2025, when given a list of 15-20 common digraphs, Malachi will correctly pronounce the sounds associated with those particular letter combinations in 3/4 trials with at least 80% accuracy as measured by teacher observation.', baseline: 'N/A', measurement: 'Teacher observation', progress: [] },
+            { id: 'malachi-4', area: 'Text Comprehension', metricType: 'percentage', text: 'By January 2025, after grade-level text is presented aloud and unfamiliar vocabulary clarified, Malachi will identify main idea(s) from the text from a field of four choices and independently find two supporting details in the text in 80% of opportunities, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+        ] 
+    },
+    { 
+        id: 12, 
+        firstName: 'Aiden', 
+        lastName: 'Rodriguez', 
+        grade: 9, 
+        iepDueDate: '2025-10-15', 
+        notes: [],
+        accommodations: [
+            { id: 'aiden-r-acc-1', text: 'Preferential seating within teacher proximity', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-2', text: 'Language Scaffolds', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-3', text: 'Simplified Directions', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-4', text: 'Curriculum should be modified as needed', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-5', text: 'Paragraph templates and high frequency words list to support his writing.', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-6', text: 'Additional time to complete assignments', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-7', text: 'Self calming strategies', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-8', text: 'Ask clarifying questions when Aiden uses vague/imprecise vocabulary', startDate: '2024-10-15', endDate: '2025-10-14', location: 'Regular classroom/public day school' },
+            { id: 'aiden-r-acc-9', text: 'Comprehension checks by asking for repetition, retell, or summaries', startDate: '2024-10-15', endDate: '2025-10-14', location: 'Regular classroom/public day school' },
+            { id: 'aiden-r-acc-10', text: 'Clarification when figurative language is used', startDate: '2024-10-15', endDate: '2025-10-14', location: 'Regular classroom/public day school' },
+            { id: 'aiden-r-acc-11', text: 'Recast grammatically incorrect sentences', startDate: '2024-10-15', endDate: '2025-10-14', location: 'Regular classroom/public day school' },
+            { id: 'aiden-r-acc-12', text: 'Verbal Sentence Frames', startDate: '2024-10-15', endDate: '2025-10-14', location: 'Regular classroom/public day school' },
+            { id: 'aiden-r-acc-13', text: 'Has the option to type or use speech to text for written assignments.', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+            { id: 'aiden-r-acc-14', text: 'opportunity to take assessments in a separate setting', startDate: '2024-10-15', endDate: '2025-10-14', location: 'General Education classroom/ public school site' },
+        ],
+        goals: [
+            { id: 'aiden-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review 2025, Aiden will demonstrate an increase in oral reading fluency by reading a list of 100 simple sight words with at least 75 words correctly per minute in 3/4 trials as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+            { id: 'aiden-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By October 2025, Aiden will do the following with 75% accuracy for a paragraph of 6th grade level text read aloud: (a) identify the main idea/main claim and 1-2 pieces of supporting evidence, (b) make a key inference with 1-2 cues and identify 1-2 pieces of supporting evidence, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'aiden-3', area: 'Communication', metricType: 'percentage', text: 'By October 2025, Aiden will share his opinion on a topic and list one reason to support it using a complete sentence (not run-on) with no more than one grammatical error in 3/4 consecutive opportunities, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'aiden-4', area: 'Expressive & Receptive Language', metricType: 'percentage', text: 'By October 2025, Aiden will answer who, what, where, and when questions about a text or video aloud in a complete grammatical sentence with 80% accuracy given a sentence frame, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'aiden-5', area: 'Behavior', metricType: 'percentage', text: 'By next annual review 2025, when receiving constructive criticism from his teachers or peers, Aiden will remain positive and be open to self improvement in 3/4 trials with 75% accuracy as measured by teacher observations.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 13, 
+        firstName: 'Camila', 
+        lastName: 'Rodriguez', 
+        grade: 9, 
+        iepDueDate: '2025-11-22', 
+        notes: [],
+        accommodations: [
+            { id: 'camila-acc-1', text: 'Peer buddy', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-2', text: 'Visuals/Pictures', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-3', text: 'Preferential seating', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-4', text: 'Graphic organizer', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-5', text: 'Modeling', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-6', text: 'Practice time', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-7', text: 'Extended time on assignments and assessments', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General Education Class/Charter School' },
+            { id: 'camila-acc-8', text: 'Token economy', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education classroom/public school site' },
+            { id: 'camila-acc-9', text: 'Cloze notes provided.', startDate: '2024-12-05', endDate: '2025-12-04', location: 'General education and separate setting' },
+            { id: 'camila-acc-10', text: 'Opportunity for assessment retakes', startDate: '2025-05-22', endDate: '2025-12-04', location: 'General Education Class/Charter School' },
+            { id: 'camila-acc-11', text: 'Separate setting for assessments', startDate: '2025-05-22', endDate: '2025-12-04', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'camila-1', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review 2025, when given a list of 100 two-syllable words Camila will be able to correctly pronounce at least 80% accurately in 3/4 trials as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+            { id: 'camila-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review 2025, when given short passages at the 6-7th grade levels, Camila will be able to answer comprehension questions with at least 80% accuracy in 3/4 trials as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+            { id: 'camila-3', area: 'Written Expression', metricType: 'percentage', text: 'By next annual review 2025, when given the topic of her choice, Camila will write at least two paragraphs using the correct syntax, grammar and spelling with at least 80% accuracy in 3/4 trials as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 14, 
+        firstName: 'Eric', 
+        lastName: 'Rodriguez', 
+        grade: 9, 
+        iepDueDate: '2026-05-05', 
+        notes: [],
+        accommodations: [
+            { id: 'eric-r-acc-1', text: 'Flexible seating to ensure auditory and visual access', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+            { id: 'eric-r-acc-2', text: 'Directions provided in a variety of ways: verbal, Gestural, model to support student expectations.', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+            { id: 'eric-r-acc-3', text: 'Language scaffolds, modified language to match the level of Eric\'s, so that he can understand what is expected of him', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+            { id: 'eric-r-acc-4', text: 'Sentence/paragraph frames when constructing sentences or paragraphs with the intent to construct essays', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+            { id: 'eric-r-acc-5', text: 'Multiplication table or calculator when working with math that requires him to multiply', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+            { id: 'eric-r-acc-6', text: 'Extra time on tests and assignments (5 additional school days beyond the due date)', startDate: '2025-05-06', endDate: '2026-05-05', location: 'General education classroom/public school site' },
+        ],
+        goals: [
+            { id: 'eric-1', area: 'Executive Functioning', metricType: 'percentage', text: 'By next annual review May 5th 2026, Eric will use a planner, checklist, or digital tool to track assignments and due dates, completing at least 80% of tasks on time with minimal teacher prompting as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'eric-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review May 5th 2026, After reading a 350-450 word passage at grade level, Eric will be able to answer 10 comprehension questions with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'eric-3', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review May 5th 2026, when given ten double digit division/multiplication problems and a multiplication chart, Eric will solve them with at least 80% accuracy on 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'eric-4', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review May 5th 2026, when given multi step word problems involving time, measurement and volume, Eric will solve them with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+        ] 
+    },
+    { 
+        id: 15, 
+        firstName: 'Agustin', 
+        lastName: 'Roman', 
+        grade: 9, 
+        iepDueDate: '2025-01-08', 
+        notes: [],
+        accommodations: [
+            { id: 'roman-acc-1', text: 'Preferential seating, close proximity to the teacher and/or lesson being presented.', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-2', text: 'Models/examples of finished product (math & writing)', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-3', text: 'Step by step directions posted during lesson.', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-4', text: 'Frequent check in for understanding', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-5', text: 'Provide extra think/wait time in order for Agustin to respond to group talk.', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-6', text: 'Extended time to complete assessments and assignments', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-7', text: 'Pair Agustin with strong language model in small or whole group.', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-8', text: 'Reduced work load for math and writing', startDate: '2024-10-22', endDate: '2025-10-21', location: 'General Education classroom/ public school site' },
+            { id: 'roman-acc-9', text: 'Opportunity for assessments taken in separate setting', startDate: '2025-05-22', endDate: '2025-10-21', location: 'General Education Class/Charter School' },
+            { id: 'roman-acc-10', text: 'Structured breaks', startDate: '2025-05-22', endDate: '2025-10-21', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'agustin-1', area: 'Vocational Skills', metricType: 'percentage', text: 'By the next annual review 2025, Agustin will be prepared for class by having his materials out on the desk and ready to participate by the time the teacher begins their instruction. He will also have his materials put away at least 1 minute before the end of class in 3/4 trials with 90% accuracy as measured by teacher observations.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 16, 
+        firstName: 'Iker', 
+        lastName: 'Salazar Gilbert', 
+        grade: 9, 
+        iepDueDate: '2026-02-26', 
+        notes: [],
+        accommodations: [
+            { id: 'iker-acc-1', text: 'Directions given in a variety of ways, simplified directions, repeated as needed, check for understanding', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-2', text: 'Visual/picture supports', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-3', text: 'Material broken down into simplified parts/chunks', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-4', text: 'Language scaffolds (e.g., modeling, rehearsals, questions that amplify or clarify the message, think alouds, repetitions of text broken down in smaller chunks, recasts, and comprehension checks)', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-5', text: 'Frequent review/repeat of previously mastered material', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-6', text: 'Extended verbal response time', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-7', text: 'Language scaffold, including graphic organizers for writing', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-8', text: 'Checks for understanding', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-9', text: 'Word processing software including grammar and spell check as well as speech to text', startDate: '2025-02-27', endDate: '2026-02-26', location: 'Regular classroom/public day school' },
+            { id: 'iker-acc-10', text: 'separate settings for assessments', startDate: '2025-02-27', endDate: '2026-02-26', location: 'General Education classroom/ public school site' },
+            { id: 'iker-acc-11', text: 'Notes to be given to him preferably before the start of class.', startDate: '2025-02-27', endDate: '2026-02-26', location: 'General Education classroom/ public school site' },
+            { id: 'iker-acc-12', text: 'Speech-to-Text (Reading, Writing, Listening)', startDate: '2025-02-27', endDate: '2026-02-26', location: 'General Education classroom/ public school site' },
+            { id: 'iker-acc-13', text: 'Allowed one assessment retake as needed after studying missed concepts.', startDate: '2025-02-27', endDate: '2026-02-26', location: 'General Education classroom/ public school site' },
+            { id: 'iker-acc-14', text: 'Student is allowed to use his cellular device/technology device to take photos of the board.', startDate: '2025-05-21', endDate: '2026-02-26', location: 'Charter School' },
+        ],
+        goals: [
+            { id: 'iker-1', area: 'Reading Comprehension', metricType: 'percentage', text: 'By next annual review Feb 26, 2026, After reading a 150-200 word passage at his instructional level, Iker will be able to answer 10 comprehension questions verbally or written with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'iker-2', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review February 26, 2026, when given a list of 15-20 common digraphs, Iker will correctly pronounce the sounds associated with those particular letter combinations in 3/4 trials with at least 80% accuracy.', baseline: 'N/A', measurement: 'Teacher observations', progress: [] },
+            { id: 'iker-3', area: 'Written Expression', metricType: 'percentage', text: 'By next annual review February 26, 2026, when taking notes, Iker will do the best he can to keep up with the rest of the class by writing in shorthand and by spelling unknown words by phonetically spelling them out. Once he\'s done with his notes, he will review them for errors and ask the teacher for clarification, if needed, in 3/4 trials with 80% accuracy and measured by student work samples or teacher observation.', baseline: 'N/A', measurement: 'Student work samples or teacher observation', progress: [] },
+            { id: 'iker-4', area: 'Mathematics', metricType: 'percentage', text: 'When given double-digit division problems (multiples of "5") and a multiplication chart, Iker will complete a worksheet of 20 problems with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+        ] 
+    },
+    { 
+        id: 17, 
+        firstName: 'Emiliano', 
+        lastName: 'Salgado Avila', 
+        grade: 9, 
+        iepDueDate: '2025-12-09', 
+        notes: [],
+        accommodations: [
+            { id: 'emiliano-acc-1', text: 'Visual organizers', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-2', text: 'Multiple or frequent breaks', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-3', text: 'Extended time on assessment and assignments', startDate: '2025-05-20', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-4', text: 'Reduce distractions to the student', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-5', text: 'Visual Cues', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-6', text: 'Ask clarifying questions when Emiliano uses vague or imprecise vocabulary', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-7', text: 'Access to flexible seating', startDate: '2025-05-20', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-8', text: 'Opportunities for facilitated social interaction', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-9', text: 'Verbal sentence frames', startDate: '2024-12-10', endDate: '2025-12-09', location: 'Across all settings' },
+            { id: 'emiliano-acc-10', text: 'Option for student to take assessments in a separate setting', startDate: '2025-05-20', endDate: '2025-12-09', location: 'General Education Class/Charter School' },
+            { id: 'emiliano-acc-11', text: 'Notecard for assessments and quizzes', startDate: '2025-05-20', endDate: '2025-12-09', location: 'General Education Class/Charter School' },
+        ],
+        goals: [
+            { id: 'emiliano-1', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review 2025, when given worksheets with at least 10 multi-step word problems relating to multiplying and dividing money, Emiliano will be able to complete them with at least 80% accuracy in 3/4 trials as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+            { id: 'emiliano-2', area: 'Behavior', metricType: 'percentage', text: 'By next annual review 2025, before the start every class, Emiliano will present his teachers with his behavior plan to be graded by the end of each period. He will do this with at least 95% accuracy everyday for every period as measured by his citizenship grade and teacher observations.', baseline: 'N/A', measurement: 'Citizenship grade and teacher observations', progress: [] },
+            { id: 'emiliano-3', area: 'Communication', metricType: 'percentage', text: 'By 12/09/2025, Emiliano will share on-topic comments and pause during 1:1 and small group conversations with familiar adults and peers to allow others to contribute in 75% of opportunities in 3 consecutive trials, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'emiliano-4', area: 'Communication', metricType: 'percentage', text: 'By 12/09/2025, Emiliano will demonstrate the ability to ask questions related to his grades and/or class assignments in appropriate ways (eg. polite tone) and at appropriate times both verbally and in writing, in 75% of opportunities, as measured by teacher, ed specialist, and SLP collected data.', baseline: 'N/A', measurement: 'Teacher, ed specialist, and SLP collected data', progress: [] },
+        ] 
+    },
+    { 
+        id: 18, 
+        firstName: 'Sophia', 
+        lastName: 'Villanueva', 
+        grade: 9, 
+        iepDueDate: '2026-02-06', 
+        notes: [],
+        accommodations: [
+            { id: 'sophia-acc-1', text: 'Increased response time', startDate: '2024-02-02', endDate: '2025-02-01', location: 'Across Settings' },
+            { id: 'sophia-acc-2', text: 'Allow Sophia to finish her thought(s) before responding', startDate: '2024-02-02', endDate: '2025-02-01', location: 'Across Settings' },
+            { id: 'sophia-acc-3', text: 'Extended time for work completion.', startDate: '2024-02-02', endDate: '2025-02-01', location: 'Across Settings' },
+            { id: 'sophia-acc-4', text: 'Preferential seating', startDate: '2024-02-02', endDate: '2025-02-01', location: 'Across settings' },
+            { id: 'sophia-acc-5', text: 'Noise Buffers', startDate: '2024-02-02', endDate: '2025-02-01', location: 'Across settings' },
+            { id: 'sophia-acc-6', text: 'Test retakes', startDate: '2025-05-15', endDate: '2026-01-27', location: 'General education classroom/public school site' },
+            { id: 'sophia-acc-7', text: 'Seperate settings for assessments', startDate: '2025-05-15', endDate: '2026-01-27', location: 'General education classroom/public school site' },
+            { id: 'sophia-acc-8', text: 'Breaks', startDate: '2025-05-15', endDate: '2026-01-27', location: 'General education classroom/public school site' },
+        ],
+        goals: [
+            { id: 'sophia-1', area: 'Mathematics', metricType: 'percentage', text: 'By next annual review 2026, when given multi step word problems involving time, measurement and volume, Sophia will solve them with at least 80% accuracy in 3/4 trials as measured by student work samples.', baseline: 'N/A', measurement: 'Student work samples', progress: [] },
+            { id: 'sophia-2', area: 'Reading Fluency', metricType: 'percentage', text: 'By next annual review 2026, Sophia will demonstrate an increase in oral reading fluency by reading simple sight word sentences with at least 3 words correctly per minute, in 3/4 trials with 85% accuracy as measured by student work samples and teacher observations.', baseline: 'N/A', measurement: 'Student work samples and teacher observations', progress: [] },
+            { id: 'sophia-3', area: 'Communication', metricType: 'percentage', text: 'By 01/27/2026, Sophia will increase her response rate to 70% when answering questions about a variety of topics in small group settings, and will use a wider variety of responses to clarify her needs when she is not able to answer (eg. I\'m not ready to talk about that right now, I need more time to think, I\'m confused, can you ask the question again?), as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'sophia-4', area: 'Communication', metricType: 'percentage', text: 'By 2/06/2026, Sophia will provide two possible interpretations of a social situation shown in an image or video and provide an appropriate response for each situation in 3/4 consecutive opportunities, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+        ] 
+    },
+    { id: 19, firstName: 'Misa', lastName: 'Fuentes', grade: 9, iepDueDate: '', notes: [], accommodations: [], goals: [] },
+    { 
+        id: 20, 
+        firstName: 'Edward', 
+        lastName: 'Gungon', 
+        grade: 11, 
+        iepDueDate: '2026-03-24', 
+        notes: [],
+        accommodations: [
+            { id: 'edward-acc-1', text: 'Increased verbal response time', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-2', text: 'Flexible seating to ensure auditory and visual access', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-3', text: 'Study sheets', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-4', text: 'Repeated drill/review', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-5', text: 'Writing templates', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-6', text: 'Graphic organizer', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-7', text: 'Sentence Starters', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-8', text: 'Directions given in a variety of modalities', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-9', text: 'Visual Cues', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-10', text: 'Check for understanding by having student restate or paraphrase information', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-11', text: 'Language scaffolds', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-12', text: 'Extended time', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-13', text: 'Read Aloud (Reading Passages)', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-14', text: 'Text-to-Speech (Reading Passages)', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-15', text: 'Multiple or frequent breaks', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-16', text: 'Calculator on assessments', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-17', text: 'Separate setting for quizzes and assessments as appropriate', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-18', text: 'Student-made note card/reference sheets allowed on assessments', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-19', text: 'Simplified directions/instructions/response questions', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-20', text: '1 retake on failed assessments', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+            { id: 'edward-acc-21', text: 'Define and pronounce unfamiliar vocabulary words on Assessments as appropriate (i.e math)', startDate: '2025-03-25', endDate: '2026-03-24', location: 'Regular Classroom/Public School' },
+        ],
+        goals: [
+            { id: 'edward-1', area: 'Communication', metricType: 'percentage', text: 'By 3/24/2026, Edward will form three complete spoken sentences on a given topic in English or Spanish (eg. event he attended, videoclip) with 80% of words produced accurately, in 3/3 consecutive trials, as measured by SLP-kept data.', baseline: 'N/A', measurement: 'SLP-kept data', progress: [] },
+            { id: 'edward-2', area: 'Reading Comprehension', metricType: 'percentage', text: 'By 03/24/26, when given a grade-level literary or informational text, Edward will analyze key ideas and details by accurately answering 6 comprehension questions (including at least 3 inference or analysis-based questions) with an average of 85% accuracy over 3 trials, as measured by student work samples, curriculum-based assessments, and teacher observations.', baseline: 'N/A', measurement: 'Student work samples, curriculum-based assessments, and teacher observations', progress: [] },
+            { id: 'edward-3', area: 'Written Expression / Transition', metricType: 'percentage', text: 'By 03/24/26, when given a written and verbal prompt, a word processor, and access to a graphic organizer, Edward will write a well-organized multi-paragraph composition (8–10 sentences per paragraph) that includes a clear thesis statement, relevant supporting details from a text, appropriate transitions, and a concluding statement. His writing will demonstrate correct subject-verb agreement, varied sentence structure, and logical organization, with 85% accuracy on 2 out of 3 trials as measured by student work samples, teacher-graded rubrics, and curriculum-based measures', baseline: 'N/A', measurement: 'Student work samples, teacher-graded rubrics, and curriculum-based measures', progress: [] },
+            { id: 'edward-4', area: 'Linear & Quadratic Equations', metricType: 'percentage', text: 'By 03/24/26, when given a reference sheet of formulas, a calculator, and a structured problem-solving checklist, EJ will solve 7 out of 10 real-world problems that require setting up and solving systems of linear equations (using substitution and elimination) and quadratic equations (by factoring or using the quadratic formula), including problems related to work and salary, as measured by student work samples and teacher records.', baseline: 'N/A', measurement: 'Student work samples and teacher records', progress: [] },
+            { id: 'edward-5', area: 'College and Career Awareness', metricType: 'percentage', text: 'By 03/24/2026, Edward will demonstrate an understanding of career pathways in radiologic medical technology and military service by creating a personalized plan that outlines his interests, potential college programs or military training options, application steps, and career goals within these fields, with a minimum accuracy of 80%, as measured by student data and teacher observations.', baseline: 'N/A', measurement: 'Student data and teacher observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 21, 
+        firstName: 'Mia', 
+        lastName: 'Castillo', 
+        grade: 11, 
+        iepDueDate: '2026-05-08', 
+        notes: [],
+        accommodations: [
+            { id: 'mia-acc-1', text: 'Shortened assignments and assessments (as needed)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-2', text: 'Notes, outlines and instructions', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-3', text: 'Check for understanding by having student restate or paraphrase information', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-4', text: 'Text-to-Speech (Reading Passages)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-5', text: 'Use of Graphic Calculator on assessments', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-6', text: 'Graphic organizer', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-7', text: 'Visual organizers', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-8', text: 'Extended time on assignments/assessments (as appropriate)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-9', text: 'Task Completion checklist', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-10', text: 'Allow Private Oral Presentation in lieu of written essay as appropriate.', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-11', text: 'Separate setting for testing as appropriate', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-12', text: 'Student-made reference card/paper allowed on assessments', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-13', text: 'One retake on failed assessments (as needed)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-14', text: 'Define unfamiliar words on assignments/assessments (as needed)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-15', text: 'Spelling Supports', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-16', text: 'Sentence starters/ Sentence Frames', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+            { id: 'mia-acc-17', text: 'Avoid (solo) presentations to the entire class (as needed)', startDate: '2025-05-09', endDate: '2026-05-08', location: 'Regular Classroom/Public School' },
+        ],
+        goals: [
+            { id: 'mia-1', area: 'Reading Comprehension', metricType: 'percentage', text: 'By 05/08/2026, Mia will cite strong and thorough textual evidence to support analysis of what the text says explicitly as well as inferences drawn with an accuracy of at least 80% in 3/4 trials as measured by work samples and/or teacher observation over 6 consecutive weeks.', baseline: 'N/A', measurement: 'Work samples and/or teacher observation', progress: [] },
+            { id: 'mia-2', area: 'Editing & Revision', metricType: 'percentage', text: 'By 05/08/2026, Mia will develop and strengthen writing as needed by planning (graphic organizers and sentence starters), revising, editing (spellcheck & grammar check), rewriting, or trying a new approach, focusing on addressing what is most significant for a specific purpose and audience earning at least 80% in 3/4 trials as measured by writing samples over 6 consecutive weeks.', baseline: 'N/A', measurement: 'Writing samples', progress: [] },
+            { id: 'mia-3', area: 'Self-Advocacy', metricType: 'percentage', text: 'By 05/08/2026, Mia will improve her self-advocacy by seeking teachers out for clarification on assignments at least twice a month via email, G-chat, or 1-on-1 conversation as observed by teacher/staff over 6 consecutive weeks.', baseline: 'N/A', measurement: 'Teacher/staff observation', progress: [] },
+            { id: 'mia-4', area: 'Vocabulary: Context Clues', metricType: 'percentage', text: 'By 05/08/2026, Mia will use context clues effectively to determine the meaning of unfamiliar words or phrases in sentences, paragraphs, and texts, achieving 80% accuracy as measured by assessments and classroom activities.', baseline: 'N/A', measurement: 'Assessments and classroom activities', progress: [] },
+            { id: 'mia-5', area: 'Spelling', metricType: 'percentage', text: 'By 05/08/2026, Mia will accurately spell grade-level words and demonstrate improved spelling skills in writing assignments, achieving 80% accuracy as measured by weekly spelling tests and written work.', baseline: 'N/A', measurement: 'Weekly spelling tests and written work', progress: [] },
+            { id: 'mia-6', area: 'Work Completion', metricType: 'percentage', text: 'By 05/08/2026, in order to support Mia with work completion, she will complete and turn in 90% of her classwork and homework for 4/5 content classes for three consecutive weeks as measured by teacher reports and observations.', baseline: 'N/A', measurement: 'Teacher reports and observations', progress: [] },
+            { id: 'mia-7', area: 'Focus and Attention', metricType: 'percentage', text: 'By 05/08/2026, in order to help Mia with her attention and focus in the classroom, she will be able to pay active attention and work on the class notes/assignments for 10-15 minutes before needing staff prompts/checkin in a class period, as measured by teacher kept data/observations.', baseline: 'N/A', measurement: 'Teacher kept data/observations', progress: [] },
+        ] 
+    },
+    { 
+        id: 22, 
+        firstName: 'Eric', 
+        lastName: 'Pedroza-Velazquez', 
+        grade: 10, 
+        iepDueDate: '', 
+        notes: [], 
+        accommodations: [
+            { id: 'pedroza-acc-1', text: 'Extended time to complete assignments and assessments', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-2', text: 'Verbal positive reinforcement/independent activity of choice for time on task/ work completion', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-3', text: 'Provide directions in a variety of modalities', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-4', text: 'Flexible seating to ensure auditory and visual access', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-5', text: 'Multiple or frequent breaks as needed', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-6', text: 'Present information in both visual and verbal formats to support his ability to comprehend and learn new information', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-7', text: 'Memorization strategies that he can use to support his ability to store information in his long-term memory', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-8', text: 'Self-generated notes sheet to be used during assessments.', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-9', text: 'Fill in the blank notes (cloze notes) to be provided when possible. When not available teacher notes provided after class for reference.', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-10', text: 'Word banks/sentence starters/sentence frames', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-11', text: 'Student is allowed to have fidgets in classes. Student sometimes uses figurines as fidgets.', startDate: '2025-04-23', endDate: '2026-04-22', location: 'general education classroom/charter schools' },
+            { id: 'pedroza-acc-12', text: 'Separate setting for assessments.', startDate: '2025-04-23', endDate: '2026-04-22', location: 'General education and separate setting' },
+        ], 
+        goals: [] 
+    },
+    { 
+        id: 23, 
+        firstName: 'Elijah', 
+        lastName: 'Holley', 
+        grade: 10, 
+        iepDueDate: '', 
+        notes: [], 
+        accommodations: [
+            { id: 'holley-acc-1', text: 'Check for understanding by having student restate or paraphrase information', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-2', text: 'Text-to-Speech (Reading Passages)', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-3', text: 'Multiple or frequent breaks', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-4', text: 'Speech-to-Text (Reading, Writing, Listening)', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-5', text: 'Provide directions in a variety of modalities', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-6', text: 'Reinforcement system-meaningful praise, rewards/ awards system.', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-7', text: 'Calculation devices/Multiplication Table', startDate: '2024-03-21', endDate: '2026-03-18', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-8', text: 'Shortened assignments (approx. 2/3 of what is assigned to peers).', startDate: '2024-03-21', endDate: '2025-03-20', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-9', text: 'Simplified test directions/reducing amount of multiple choice options', startDate: '2024-03-21', endDate: '2025-03-20', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-10', text: 'Sentence frames/sentence starters', startDate: '2024-03-21', endDate: '2025-03-20', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-11', text: 'Self-generated notes to be used for quizzes/assessments', startDate: '2024-03-21', endDate: '2025-03-20', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-12', text: 'Extended time on assignments and assessments (no more than 2 weeks from the original due date for assignments, no more than by the end of the grading period for assessments)', startDate: '2024-03-21', endDate: '2025-03-20', location: 'general education classroom/charter schools' },
+            { id: 'holley-acc-13', text: 'Separate setting for assessments, as needed', startDate: '2024-09-23', endDate: '2025-03-20', location: 'Regular classroom/Public school' },
+            { id: 'holley-acc-14', text: 'Shortened/accommodated assessments to focus on mastery of concepts', startDate: '2024-09-23', endDate: '2025-03-20', location: 'Regular classroom/Public school' },
+            { id: 'holley-acc-15', text: 'One retake per assessment, as needed', startDate: '2024-09-23', endDate: '2025-03-20', location: 'Regular classroom/Public school' },
+        ], 
+        goals: [] 
+    },
+    { 
+        id: 24, 
+        firstName: 'Brylle-Calvin', 
+        lastName: 'Contridas', 
+        grade: 10, 
+        iepDueDate: '2026-03-16',
+        notes: [],
+        accommodations: [
+            { id: 'contridas-acc-1', text: 'Flexible seating to ensure auditory and visual access', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-2', text: 'Extended time to complete assignments and assessments (no more than 2 weeks from the original due date for assignments, no more than by the end of the grading period for assessments)', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-3', text: 'Multiple or frequent breaks', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-4', text: 'Clarify directions, checks for understanding', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-5', text: 'Calculation devices/Multiplication Table', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-6', text: 'Breaks to counseling center initiated by student or counseling department staff as needed', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-7', text: 'Separate setting for quizzes and assessments as needed', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+            { id: 'contridas-acc-8', text: 'Self-generated notecard can be used for quizzes and assessments. If teacher allows a notecard Anthony gets a a half sheet, if the teacher offers a half sheet he gets a whole sheet etc.', startDate: '2025-03-17', endDate: '2026-03-16', location: 'general education classroom/charter schools' },
+        ], 
+        goals: [] 
+    },
+    { 
+        id: 25, 
+        firstName: 'Anthony', 
+        lastName: 'Juarez', 
+        grade: 11, 
+        iepDueDate: '', 
+        notes: [], 
+        accommodations: [
+            { id: 'juarez-acc-1', text: 'directions given in a variety of ways, verbal response time, visuals', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-2', text: 'Shorten and simplify instructions', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-3', text: 'Repeat and reword directions and new information', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-4', text: 'Comprehension checks by asking for repetition, retells, or summaries', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-5', text: 'Increased time to organize and structure verbal responses.', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-6', text: 'Flexible seating to ensure auditory and visual access', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-7', text: 'clear and simple instructions', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-8', text: 'Word Wall', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-9', text: 'repeat/review/drill', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-10', text: 'step by step instructions', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-11', text: 'Visual Cues', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-12', text: 'Check for understanding by having student restate or paraphrase information', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-13', text: 'Models/examples of assignments', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-14', text: 'Calculation devices/Calculator (allowed items, grades 6-8 and 11)', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-15', text: 'Assessment re-takes with a copy of notes. To be provided by the general education or special education staff.', startDate: '2023-02-21', endDate: '2026-02-09', location: 'General education classroom/public school site' },
+            { id: 'juarez-acc-16', text: 'Read Aloud (Reading Passages)', startDate: '2023-10-27', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-17', text: 'Notes, outlines and instructions', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-18', text: 'Books on tape', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-19', text: 'Separate Setting', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-20', text: '1 page reference sheet allowed on assessments', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-21', text: 'Verbal or written steps/formulas provided on student assessments for math and science', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+            { id: 'juarez-acc-22', text: 'graphic organizers, sentence frames, word banks', startDate: '2024-02-15', endDate: '2026-02-09', location: 'Regular Classroom/Public School' },
+        ], 
+        goals: [] 
+    },
+];
+
+// --- (The rest of the code is identical to the previous version, starting from the Context setup) ---
+
+// --- Context for State Management ---
+const StudentDataContext = createContext(null);
+
+const useStudentData = () => {
+    const context = useContext(StudentDataContext);
+    if (!context) {
+        throw new Error("useStudentData must be used within a StudentDataProvider");
+    }
+    return context;
+};
+
+const StudentDataProvider = ({ children }) => {
+    const [students, setStudents] = useState(initialStudentsData);
+
+    const addProgress = useCallback((studentId, goalId, progressData) => {
+        setStudents(prevStudents => {
+            return prevStudents.map(student => {
+                if (student.id === studentId) {
+                    const updatedGoals = student.goals.map(goal => {
+                        if (goal.id === goalId) {
+                            return { ...goal, progress: [...goal.progress, progressData] };
+                        }
+                        return goal;
+                    });
+                    return { ...student, goals: updatedGoals };
+                }
+                return student;
+            });
+        });
+    }, []);
+    
+    const addGroupProgress = useCallback((progressEntries) => {
+        setStudents(prevStudents => {
+            const updatedStudents = [...prevStudents];
+            progressEntries.forEach(({ studentId, goalId, score, notes, date }) => {
+                const studentIndex = updatedStudents.findIndex(s => s.id === studentId);
+                if (studentIndex !== -1) {
+                    const goalIndex = updatedStudents[studentIndex].goals.findIndex(g => g.id === goalId);
+                    if (goalIndex !== -1) {
+                         updatedStudents[studentIndex].goals[goalIndex].progress.push({
+                            id: Date.now() + studentId + goalId,
+                            date,
+                            score,
+                            notes
+                        });
+                    }
+                }
+            });
+            return updatedStudents;
+        });
+    }, []);
+    
+    const addNote = useCallback((studentId, noteText) => {
+        setStudents(prevStudents => {
+            return prevStudents.map(student => {
+                if (student.id === studentId) {
+                    const newNote = {
+                        id: Date.now(),
+                        date: new Date().toISOString().split('T')[0],
+                        text: noteText,
+                    };
+                    return { ...student, notes: [...student.notes, newNote] };
+                }
+                return student;
+            });
+        });
+    }, []);
+    
+    const logAccommodationUsage = useCallback((studentId, accommodationId, usageData) => {
+        setStudents(prevStudents => {
+            return prevStudents.map(student => {
+                if (student.id === studentId) {
+                    const updatedAccommodations = student.accommodations.map(acc => {
+                        if (acc.id === accommodationId) {
+                            const newUsage = { ...usageData, id: Date.now() };
+                            return { ...acc, usage: [...acc.usage, newUsage] };
+                        }
+                        return acc;
+                    });
+                    return { ...student, accommodations: updatedAccommodations };
+                }
+                return student;
+            });
+        });
+    }, []);
+
+    const value = { students, addProgress, addGroupProgress, addNote, logAccommodationUsage };
+
+    return (
+        <StudentDataContext.Provider value={value}>
+            {children}
+        </StudentDataContext.Provider>
+    );
+};
+
+
+// --- Helper Components ---
+const Icon = ({ path, className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+    </svg>
+);
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <div className="flex justify-between items-center p-4 border-b">
+                    <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <Icon path="M6 18L18 6M6 6l12 12" />
+                    </button>
+                </div>
+                <div className="p-6 overflow-y-auto">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Utility Functions ---
+const calculateAverage = (progress) => {
+    if (!progress || progress.length === 0) return null;
+    const scores = progress.map(p => parseFloat(p.score)).filter(s => !isNaN(s));
+    if (scores.length === 0) return null;
+    return scores.reduce((acc, score) => acc + score, 0) / scores.length;
+};
+
+const getStatus = (average) => {
+    if (average === null) return { label: 'No Data', color: 'bg-gray-400', textColor: 'text-gray-600', bgColor: 'bg-gray-100' };
+    if (average >= 90) return { label: 'Mastered', color: 'bg-blue-500', textColor: 'text-blue-600', bgColor: 'bg-blue-100' };
+    if (average >= 70) return { label: 'On Track', color: 'bg-green-500', textColor: 'text-green-600', bgColor: 'bg-green-100' };
+    return { label: 'Needs Attention', color: 'bg-yellow-500', textColor: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+};
+
+const getAccommodationTag = (text) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('seating') || lowerText.includes('schedule') || lowerText.includes('breaks')) return { label: 'Environmental', color: 'bg-cyan-100 text-cyan-800' };
+    if (lowerText.includes('assessment') || lowerText.includes('retake') || lowerText.includes('time on test') || lowerText.includes('setting for testing')) return { label: 'Assessment', color: 'bg-purple-100 text-purple-800' };
+    if (lowerText.includes('directions') || lowerText.includes('scaffolds') || lowerText.includes('frames') || lowerText.includes('organizer') || lowerText.includes('notes') || lowerText.includes('read aloud')) return { label: 'Instructional', color: 'bg-blue-100 text-blue-800' };
+    if (lowerText.includes('positive') || lowerText.includes('check-in') || lowerText.includes('self-esteem') || lowerText.includes('requesting help')) return { label: 'Behavioral/Social', color: 'bg-pink-100 text-pink-800' };
+    if (lowerText.includes('multiplication table') || lowerText.includes('calculator') || lowerText.includes('read and write') || lowerText.includes('text-to-speech')) return { label: 'Assistive Tech', color: 'bg-orange-100 text-orange-800' };
+    return { label: 'General', color: 'bg-gray-100 text-gray-800' };
+};
+
+
+// --- Main Components ---
+
+const GoalCard = React.memo(({ goal, studentId, studentGrade }) => {
+    const { addProgress } = useStudentData();
+    const [showForm, setShowForm] = useState(false);
+    const [newProgress, setNewProgress] = useState({ date: new Date().toISOString().split('T')[0], score: '', notes: '' });
+    const [isSaving, setIsSaving] = useState(false);
+    const [highlightedId, setHighlightedId] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalContent, setModalContent] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+
+    const goalAverage = calculateAverage(goal.progress);
+    const goalStatus = getStatus(goalAverage);
+
+    const handleInputChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setNewProgress(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleSubmit = useCallback((e) => {
+        e.preventDefault();
+        if (newProgress.score.trim() === '' || isSaving) return;
+        setIsSaving(true);
+        setTimeout(() => {
+            const progressWithId = { ...newProgress, id: Date.now() };
+            addProgress(studentId, goal.id, progressWithId);
+            setNewProgress({ date: new Date().toISOString().split('T')[0], score: '', notes: '' });
+            setIsSaving(false);
+            setShowForm(false);
+            setHighlightedId(progressWithId.id);
+            setTimeout(() => setHighlightedId(null), 2000);
+        }, 500);
+    }, [newProgress, isSaving, addProgress, studentId, goal.id]);
+    
+    const handleSuggestInterventions = async () => {
+        setIsGenerating(true);
+        setIsModalOpen(true);
+        setModalContent("✨ Generating intervention ideas...");
+
+        const prompt = `Act as a special education expert. For a ${studentGrade}th grade student with the following IEP goal, suggest 2-3 specific, actionable, and evidence-based intervention strategies. Format the response using markdown. Goal: "${goal.text}"`;
+        
+        try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.candidates && result.candidates[0].content.parts[0].text) {
+              const text = result.candidates[0].content.parts[0].text;
+              setModalContent(text);
+            } else {
+              setModalContent("Sorry, I couldn't generate suggestions at this time. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            setModalContent("An error occurred while fetching suggestions.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const renderScoreInput = () => {
+        switch (goal.metricType) {
+            case 'frequency':
+                return <input type="text" name="score" placeholder="e.g., 3/5" value={newProgress.score} onChange={handleInputChange} className="p-2 border rounded-md" required disabled={isSaving} />;
+            case 'duration':
+                return <input type="text" name="score" placeholder="e.g., 12 mins" value={newProgress.score} onChange={handleInputChange} className="p-2 border rounded-md" required disabled={isSaving} />;
+            case 'rubric':
+                return <input type="text" name="score" placeholder="e.g., 3" value={newProgress.score} onChange={handleInputChange} className="p-2 border rounded-md" required disabled={isSaving} />;
+            case 'notes':
+                return <input type="text" name="score" value="N/A" readOnly className="p-2 border rounded-md bg-gray-100" />;
+            default: // percentage
+                return <input type="text" name="score" placeholder="e.g., 85%" value={newProgress.score} onChange={handleInputChange} className="p-2 border rounded-md" required disabled={isSaving} />;
+        }
+    };
+
+    return (
+        <>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Intervention Suggestions">
+                 <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: modalContent.replace(/\n/g, '<br />') }} />
+            </Modal>
+            <div className="bg-white rounded-lg shadow-md mb-6 p-6 border border-gray-200">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800">{goal.area}</h3>
+                        <p className="text-sm text-gray-500 mt-1"><strong>Measurement:</strong> {goal.measurement}</p>
+                    </div>
+                    <div className={`text-sm font-semibold ${goalStatus.textColor} ${goalStatus.bgColor} px-3 py-1 rounded-full`}>
+                        {goalStatus.label}
+                    </div>
+                </div>
+                <p className="text-gray-700 mt-4">{goal.text}</p>
+                {goal.baseline !== 'N/A' && <p className="text-sm text-gray-600 mt-3 p-3 bg-gray-50 rounded-md"><strong>Baseline:</strong> {goal.baseline}</p>}
+                
+                <div className="mt-6">
+                    <h4 className="font-semibold text-gray-700 mb-3">Progress Entries</h4>
+                    {goal.progress.length > 0 ? (
+                        <ul className="space-y-3">
+                            {goal.progress.map((p) => (
+                                <li key={p.id || p.date} className={`flex items-center justify-between p-3 rounded-lg transition-colors duration-200 ${highlightedId === p.id ? 'new-progress-entry' : 'bg-gray-50'}`}>
+                                    <div className="flex items-center space-x-4">
+                                        <span className="text-sm font-medium text-gray-600">{new Date(p.date).toLocaleDateString()}</span>
+                                        <p className="text-sm text-gray-800"><strong className="font-semibold">Score/Accuracy:</strong> {p.score}</p>
+                                    </div>
+                                    <p className="text-sm text-gray-500 italic">"{p.notes}"</p>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-sm text-gray-400 italic text-center py-4">No progress entries yet.</p>
+                    )}
+                </div>
+
+                {showForm ? (
+                    <form onSubmit={handleSubmit} className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                        <h5 className="font-bold mb-3 text-gray-700">Add New Progress Entry</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="date" name="date" value={newProgress.date} onChange={handleInputChange} className="p-2 border rounded-md" disabled={isSaving} />
+                            {renderScoreInput()}
+                            <input type="text" name="notes" placeholder="Brief notes..." value={newProgress.notes} onChange={handleInputChange} className="p-2 border rounded-md" disabled={isSaving} />
+                        </div>
+                        <div className="flex justify-end space-x-3 mt-4">
+                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50" disabled={isSaving}>Cancel</button>
+                            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center" disabled={isSaving}>
+                                {isSaving && <Icon path="M16.023 9.348h4.992v-.001a10.987 10.987 0 00-2.3-5.842 10.99 10.99 0 00-4.84-3.575M16.023 9.348L19.5 11.25l-3.477 1.902m0 0a10.99 10.99 0 01-4.84 3.575 10.987 10.987 0 01-5.842-2.3 10.99 10.99 0 01-3.575-4.84m0 0L3.5 11.25l1.902 3.477m0 0a10.99 10.99 0 003.575 4.84 10.987 10.987 0 005.842 2.3 10.99 10.99 0 004.84-3.575m0 0l3.477-1.902-1.902-3.477m0 0a10.99 10.99 0 01-3.575-4.84 10.987 10.987 0 01-2.3-5.842" className="animate-spin w-5 h-5 mr-2" />}
+                                {isSaving ? 'Saving...' : 'Save Entry'}
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="text-right mt-4 flex justify-end space-x-2">
+                         <button onClick={handleSuggestInterventions} className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-md hover:bg-indigo-200 shadow-sm" disabled={isGenerating}>
+                            ✨ Suggest Interventions
+                        </button>
+                        <button onClick={() => setShowForm(true)} className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm">
+                            <Icon path="M12 4.5v15m7.5-7.5h-15" className="w-5 h-5 mr-2" />
+                            Add Progress
+                        </button>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+});
+
+const AccommodationCard = React.memo(({ accommodation, studentId }) => {
+    const { logAccommodationUsage } = useStudentData();
+    const [isLogging, setIsLogging] = useState(false);
+    const [usageData, setUsageData] = useState({ setting: '', notes: '' });
+
+    const tag = getAccommodationTag(accommodation.text);
+
+    const handleLogUsage = () => {
+        if(usageData.setting.trim()) {
+            logAccommodationUsage(studentId, accommodation.id, {
+                date: new Date().toISOString().split('T')[0],
+                ...usageData
+            });
+            setUsageData({ setting: '', notes: '' });
+            setIsLogging(false);
+        }
+    };
+
+    return (
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+            <div className="flex items-start justify-between">
+                <div>
+                    <p className="text-sm text-gray-800">{accommodation.text}</p>
+                    <p className="text-xs text-gray-400 mt-2">{accommodation.location}</p>
+                </div>
+                <div className="flex flex-col items-end space-y-2">
+                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${tag.color}`}>{tag.label}</span>
+                    {accommodation.complexity === 'complex' && (
+                         <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-800">Requires Coordination</span>
+                    )}
+                </div>
+            </div>
+             <div className="text-sm text-gray-600 mt-2">Usage Count: {accommodation.usage.length}</div>
+            {isLogging ? (
+                <div className="mt-4 space-y-2">
+                    <input 
+                        type="text"
+                        placeholder="Setting (e.g., Math Class)"
+                        value={usageData.setting}
+                        onChange={e => setUsageData({...usageData, setting: e.target.value})}
+                        className="w-full p-2 border rounded-md text-sm"
+                    />
+                    <textarea
+                        placeholder="Optional notes..."
+                        value={usageData.notes}
+                        onChange={e => setUsageData({...usageData, notes: e.target.value})}
+                        className="w-full p-2 border rounded-md text-sm"
+                        rows="2"
+                    ></textarea>
+                    <div className="flex justify-end space-x-2">
+                        <button onClick={() => setIsLogging(false)} className="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">Cancel</button>
+                        <button onClick={handleLogUsage} className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Save Log</button>
+                    </div>
+                </div>
+            ) : (
+                <div className="text-right mt-2">
+                    <button onClick={() => setIsLogging(true)} className="px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-md hover:bg-indigo-200">Log Usage</button>
+                </div>
+            )}
+        </div>
+    );
+});
+
+const StudentDetail = React.memo(({ student }) => {
+    const { addNote } = useStudentData();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalContent, setModalContent] = useState('');
+    const [modalTitle, setModalTitle] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [newNote, setNewNote] = useState("");
+    const [activeTab, setActiveTab] = useState('goals'); // goals, notes, accommodations
+
+    if (!student) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-center p-10 bg-gray-50 rounded-r-lg">
+                <div>
+                    <Icon path="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" className="w-24 h-24 mx-auto text-gray-300" />
+                    <h2 className="mt-4 text-2xl font-bold text-gray-500">Select a Student</h2>
+                    <p className="mt-2 text-gray-400">Choose a student from the list to view their goals and track progress.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const overallAverage = calculateAverage(student.goals.flatMap(g => g.progress));
+    const overallStatus = getStatus(overallAverage);
+
+    const handleGenerateSummary = async () => {
+        setIsGenerating(true);
+        setIsModalOpen(true);
+        setModalTitle(`Progress Summary for ${student.firstName}`);
+        setModalContent("✨ Generating progress summary...");
+
+        const progressDataString = student.goals.map(goal => {
+            const entries = goal.progress.map(p => `  - Date: ${p.date}, Score: ${p.score}, Notes: ${p.notes}`).join('\n');
+            return `Goal: ${goal.text}\nProgress:\n${entries || '  - No data entered.'}`;
+        }).join('\n\n');
+
+        const prompt = `Act as a special education case manager. Based on the following data for a ${student.grade}th grade student named ${student.firstName}, write a concise, professional progress summary suitable for an IEP meeting. Highlight areas of strength and areas needing continued focus. Format the response using markdown.\n\nData:\n${progressDataString}`;
+
+        try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.candidates && result.candidates[0].content.parts[0].text) {
+                setModalContent(result.candidates[0].content.parts[0].text);
+            } else {
+                setModalContent("Sorry, I couldn't generate a summary at this time.");
+            }
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            setModalContent("An error occurred while fetching the summary.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleSmartGoalBuilder = () => {
+        setModalTitle("Smart Goal Builder");
+        setModalContent(<SmartGoalBuilder student={student} />);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveNote = () => {
+        if (newNote.trim()) {
+            addNote(student.id, newNote);
+            setNewNote("");
+        }
+    };
+    
+    const renderActiveTabContent = () => {
+        switch(activeTab) {
+            case 'notes':
+                return (
+                    <div className="mt-8">
+                        <div className="bg-white p-4 rounded-lg shadow">
+                            <textarea 
+                                className="w-full p-2 border rounded-md"
+                                rows="4"
+                                placeholder="Add a note about parent communication, behavior incidents, etc..."
+                                value={newNote}
+                                onChange={(e) => setNewNote(e.target.value)}
+                            ></textarea>
+                            <div className="text-right mt-2">
+                                <button onClick={handleSaveNote} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm">
+                                    Save Note
+                                </button>
+                            </div>
+                        </div>
+                        <div className="mt-4 space-y-3">
+                            {student.notes && student.notes.sort((a,b) => new Date(b.date) - new Date(a.date)).map(note => (
+                                <div key={note.id} className="bg-white p-3 rounded-lg shadow-sm border">
+                                    <p className="text-sm text-gray-800">{note.text}</p>
+                                    <p className="text-xs text-gray-400 text-right mt-2">{new Date(note.date).toLocaleDateString()}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            case 'accommodations':
+                 return (
+                    <div className="mt-8 space-y-4">
+                        {student.accommodations && student.accommodations.map(acc => (
+                           <AccommodationCard key={acc.id} accommodation={acc} studentId={student.id} />
+                        ))}
+                    </div>
+                );
+            case 'goals':
+            default:
+                return (
+                    <div>
+                        <div className="mb-6 text-right">
+                            <button onClick={handleSmartGoalBuilder} className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 shadow-sm">
+                                🧠 Smart Goal Builder
+                            </button>
+                        </div>
+                        {student.goals.length > 0 ? (
+                            student.goals.map(goal => <GoalCard key={goal.id} goal={goal} studentId={student.id} studentGrade={student.grade} />)
+                        ) : (
+                            <div className="text-center py-20">
+                                <Icon path="M9 12h.01M15 12h.01M12 12h.01M12 6h.01M12 18h.01M12 21a9 9 0 110-18 9 9 0 010 18z" className="w-16 h-16 mx-auto text-gray-300" />
+                                <h3 className="mt-4 text-xl font-semibold text-gray-500">No Goals Added</h3>
+                                <p className="mt-2 text-gray-400">This student does not have any goals assigned yet.</p>
+                            </div>
+                        )}
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalTitle}>
+                 {typeof modalContent === 'string' ? <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: modalContent.replace(/\n/g, '<br />') }} /> : modalContent}
+            </Modal>
+            <div className="flex-1 p-8 bg-gray-50 overflow-y-auto rounded-r-lg" style={{maxHeight: '100vh'}}>
+                <div className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
+                    <div>
+                        <h1 className="text-4xl font-extrabold text-gray-800">{student.firstName} {student.lastName}</h1>
+                        <p className="text-lg text-gray-500 mt-1">Grade {student.grade} | IEP Due: {student.iepDueDate ? new Date(student.iepDueDate).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                     <div className="flex items-center space-x-4">
+                         <button onClick={handleGenerateSummary} className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-md hover:bg-indigo-200 shadow-sm" disabled={isGenerating}>
+                            ✨ Generate Summary
+                        </button>
+                        <div className={`flex items-center space-x-2 ${overallStatus.textColor} ${overallStatus.bgColor} px-4 py-2 rounded-full`}>
+                            <div className={`w-3 h-3 rounded-full ${overallStatus.color}`}></div>
+                            <span className="font-semibold">{overallStatus.label}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button onClick={() => setActiveTab('goals')} className={`${activeTab === 'goals' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>Goals</button>
+                        <button onClick={() => setActiveTab('accommodations')} className={`${activeTab === 'accommodations' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>Accommodations</button>
+                        <button onClick={() => setActiveTab('notes')} className={`${activeTab === 'notes' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>Notes</button>
+                    </nav>
+                </div>
+
+                {renderActiveTabContent()}
+
+            </div>
+        </>
+    );
+});
+
+const SmartGoalBuilder = ({ student }) => {
+    const [goalArea, setGoalArea] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const { students } = useStudentData();
+
+    const goalAreas = useMemo(() => [...new Set(students.flatMap(s => s.goals.map(g => g.area)))].sort(), [students]);
+
+    const handleGenerateGoals = async () => {
+        if (!goalArea) return;
+        setIsGenerating(true);
+        setSuggestions([]);
+
+        const prompt = `Act as a special education expert. For a ${student.grade}th grade student, generate 3 distinct, well-written, and measurable SMART goals for the area of "${goalArea}". Format the response as a numbered list within a single block of text, using markdown for bolding and italics.`;
+
+        try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const result = await response.json();
+
+            if (result.candidates && result.candidates[0].content.parts[0].text) {
+                const text = result.candidates[0].content.parts[0].text;
+                setSuggestions(text.split('\n').filter(s => s.trim() !== ''));
+            } else {
+                setSuggestions(["Could not generate goals at this time."]);
+            }
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            setSuggestions(["An error occurred while fetching suggestions."]);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex items-center space-x-4 mb-4">
+                <select value={goalArea} onChange={e => setGoalArea(e.target.value)} className="w-full p-2 border border-gray-300 rounded-md bg-white">
+                    <option value="">Select Goal Area...</option>
+                    {goalAreas.map(area => <option key={area} value={area}>{area}</option>)}
+                </select>
+                <button onClick={handleGenerateGoals} disabled={isGenerating || !goalArea} className="px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400">
+                    {isGenerating ? "Generating..." : "Generate"}
+                </button>
+            </div>
+            <div className="mt-6">
+                {isGenerating && <p>✨ Generating goal templates...</p>}
+                {suggestions.length > 0 && (
+                    <div className="prose max-w-none">
+                        <h4>Suggested Goals:</h4>
+                        <div dangerouslySetInnerHTML={{ __html: suggestions.join('<br/>') }} />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const StudentListSidebar = React.memo(({ students, selectedStudentId, onSelectStudent, searchTerm, onSearchChange, filterGrade, onGradeChange, sortBy, onSortChange, onToggleGroupMode, onToggleTimelineMode, onToggleDashboardMode, notifications }) => {
+    const grades = [...new Set(initialStudentsData.map(s => s.grade))].sort((a, b) => a - b);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    return (
+        <div className="w-1/3 max-w-sm bg-white border-r border-gray-200 flex flex-col" style={{maxHeight: '100vh'}}>
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                    <Icon path="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-4.67c.12-.241.242-.487.363-.732m-3.007-7.422c1.732-.63 3.58-.933 5.457-.933s3.725.303 5.457.933m-10.914 0c-1.732.63-3.58.933-5.457-.933S1.275 11.393 3 10.763m10.914-2.886c-1.732-.63-3.58-.933-5.457-.933S1.275 7.24 3 7.873" className="w-8 h-8 mr-3 text-indigo-600"/>
+                    My Caseload
+                </h2>
+                <div className="flex items-center space-x-1">
+                     <div className="relative">
+                        <button onClick={() => setShowNotifications(s => !s)} title="Notifications" className="p-2 rounded-md hover:bg-gray-100 text-gray-500 relative">
+                            <Icon path="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            {notifications.length > 0 && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>}
+                        </button>
+                        {showNotifications && (
+                            <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg border z-10">
+                                <div className="p-3 font-bold border-b">Upcoming IEPs</div>
+                                <ul>
+                                    {notifications.length > 0 ? notifications.map(n => (
+                                        <li key={n.id} className="p-3 border-b hover:bg-gray-50 text-sm">
+                                            <strong>{n.name}'s</strong> IEP is due in <strong>{n.daysUntil} days</strong>.
+                                        </li>
+                                    )) : <li className="p-3 text-sm text-gray-500">No upcoming deadlines.</li>}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                    <button onClick={onToggleDashboardMode} title="Dashboard View" className="p-2 rounded-md hover:bg-gray-100 text-gray-500">
+                        <Icon path="M9 17v-2.172a2 2 0 01.586-1.414l5.414-5.414a2 2 0 012.828 0L20 9.172a2 2 0 010 2.828l-5.414 5.414A2 2 0 0112.828 18H11a2 2 0 01-2-2v-1z M9 17a5 5 0 01-5-5v-1a5 5 0 015-5h1a5 5 0 015 5v1a5 5 0 01-5 5H9z" />
+                    </button>
+                    <button onClick={onToggleTimelineMode} title="IEP Timeline View" className="p-2 rounded-md hover:bg-gray-100 text-gray-500">
+                        <Icon path="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M12 12.75h.008v.008H12v-.008z" />
+                    </button>
+                    <button onClick={onToggleGroupMode} title="Group Entry Mode" className="p-2 rounded-md hover:bg-gray-100 text-gray-500">
+                        <Icon path="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962a3 3 0 00-4.682 2.72 9.094 9.094 0 003.741.479m7.5-2.962a3 3 0 01-4.682-2.72 9.094 9.094 0 013.741-.479m-7.5 2.962a3 3 0 01-4.682 2.72 9.094 9.094 0 013.741-.479M12 12.75a3 3 0 110-6 3 3 0 010 6z" />
+                    </button>
+                </div>
+            </div>
+            <div className="p-4 border-b border-gray-200 space-y-4">
+                <input
+                    type="text"
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={onSearchChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <div className="flex space-x-2">
+                    <select
+                        value={filterGrade}
+                        onChange={onGradeChange}
+                        className="w-1/2 p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    >
+                        <option value="">All Grades</option>
+                        {grades.map(grade => <option key={grade} value={grade}>Grade {grade}</option>)}
+                    </select>
+                    <select
+                        value={sortBy}
+                        onChange={onSortChange}
+                        className="w-1/2 p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    >
+                        <option value="lastName-asc">Name (A-Z)</option>
+                        <option value="lastName-desc">Name (Z-A)</option>
+                        <option value="iepDate">IEP Date</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+            <ul className="flex-1 overflow-y-auto">
+                {students.length > 0 ? students.map(student => {
+                    const studentStatus = getStatus(calculateAverage(student.goals.flatMap(g => g.progress)));
+                    return (
+                        <li key={student.id}>
+                            <button
+                                onClick={() => onSelectStudent(student.id)}
+                                className={`w-full text-left p-4 text-sm font-medium flex items-center space-x-3 transition-colors duration-150 ${
+                                    selectedStudentId === student.id
+                                        ? 'bg-indigo-50 text-indigo-700 border-r-4 border-indigo-500'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <div className={`w-2.5 h-2.5 rounded-full ${studentStatus.color}`}></div>
+                                <span>{student.lastName}, {student.firstName}</span>
+                                <span className="text-xs text-gray-400">(Gr. {student.grade})</span>
+                            </button>
+                        </li>
+                    );
+                }) : (
+                    <p className="text-center text-gray-500 p-8">No students match your search.</p>
+                )}
+            </ul>
+        </div>
+    );
+});
+
+const GroupEntryMode = ({ onToggleGroupMode }) => {
+    const { students, addGroupProgress } = useStudentData();
+    const [selectedGoalArea, setSelectedGoalArea] = useState('');
+    const [progressEntries, setProgressEntries] = useState({});
+    const [commonDate, setCommonDate] = useState(new Date().toISOString().split('T')[0]);
+
+    const goalAreas = useMemo(() => [...new Set(students.flatMap(s => s.goals.map(g => g.area)))].sort(), [students]);
+
+    const filteredStudents = useMemo(() => {
+        if (!selectedGoalArea) return [];
+        return students.filter(s => s.goals.some(g => g.area === selectedGoalArea));
+    }, [students, selectedGoalArea]);
+
+    const handleEntryChange = (studentId, goalId, field, value) => {
+        setProgressEntries(prev => ({
+            ...prev,
+            [`${studentId}-${goalId}`]: {
+                ...prev[`${studentId}-${goalId}`],
+                [field]: value,
+            }
+        }));
+    };
+    
+    const handleSaveAll = () => {
+        const entriesToSave = Object.entries(progressEntries)
+            .filter(([key, value]) => value.score) // Only save entries that have a score
+            .map(([key, value]) => {
+                const [studentId, goalId] = key.split('-');
+                return {
+                    studentId: parseInt(studentId),
+                    goalId: `${goalId}`,
+                    score: value.score,
+                    notes: value.notes || '',
+                    date: commonDate,
+                };
+            });
+
+        addGroupProgress(entriesToSave);
+        onToggleGroupMode(); // Exit group mode after saving
+    };
+
+    return (
+        <div className="flex-1 flex flex-col p-8 bg-gray-50" style={{maxHeight: '100vh'}}>
+            <div className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
+                <h1 className="text-4xl font-extrabold text-gray-800">Group Progress Entry</h1>
+                <button onClick={onToggleGroupMode} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">Exit Group Mode</button>
+            </div>
+            <div className="flex items-center space-x-4 mb-6">
+                <select value={selectedGoalArea} onChange={e => setSelectedGoalArea(e.target.value)} className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                    <option value="">Select Goal Area...</option>
+                    {goalAreas.map(area => <option key={area} value={area}>{area}</option>)}
+                </select>
+                <input type="date" value={commonDate} onChange={e => setCommonDate(e.target.value)} className="p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+                <table className="min-w-full bg-white border">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            <th className="text-left font-semibold p-3">Student</th>
+                            <th className="text-left font-semibold p-3">Score</th>
+                            <th className="text-left font-semibold p-3">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredStudents.map(student => {
+                            const relevantGoal = student.goals.find(g => g.area === selectedGoalArea);
+                            const entryKey = `${student.id}-${relevantGoal.id}`;
+                            return (
+                                <tr key={student.id} className="border-b">
+                                    <td className="p-3">{student.lastName}, {student.firstName}</td>
+                                    <td className="p-3">
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g., 85%" 
+                                            className="w-full p-2 border rounded-md"
+                                            value={progressEntries[entryKey]?.score || ''}
+                                            onChange={e => handleEntryChange(student.id, relevantGoal.id, 'score', e.target.value)}
+                                        />
+                                    </td>
+                                    <td className="p-3">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Optional notes" 
+                                            className="w-full p-2 border rounded-md"
+                                            value={progressEntries[entryKey]?.notes || ''}
+                                            onChange={e => handleEntryChange(student.id, relevantGoal.id, 'notes', e.target.value)}
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            <div className="pt-6 text-right">
+                <button onClick={handleSaveAll} className="px-6 py-3 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-md">Save All Entries</button>
+            </div>
+        </div>
+    );
+};
+
+const IEPTimelineView = ({ onToggleTimelineMode }) => {
+    const { students } = useStudentData();
+    const today = new Date();
+    const oneYearFromNow = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+
+    const studentsWithDates = useMemo(() => students.filter(s => s.iepDueDate).sort((a,b) => new Date(a.iepDueDate) - new Date(b.iepDueDate)), [students]);
+
+    const totalDays = (oneYearFromNow - today) / (1000 * 60 * 60 * 24);
+
+    return (
+        <div className="flex-1 flex flex-col p-8 bg-gray-50" style={{maxHeight: '100vh'}}>
+            <div className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
+                <h1 className="text-4xl font-extrabold text-gray-800">IEP Timeline</h1>
+                <button onClick={onToggleTimelineMode} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">Exit Timeline View</button>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-4">
+                {studentsWithDates.map(student => {
+                    const dueDate = new Date(student.iepDueDate);
+                    const daysUntilDue = (dueDate - today) / (1000 * 60 * 60 * 24);
+                    if (daysUntilDue < 0) return null; // Don't show past due dates in this view
+
+                    const width = (daysUntilDue / totalDays) * 100;
+                    
+                    let barColor = 'bg-green-500';
+                    if (daysUntilDue <= 30) barColor = 'bg-red-500';
+                    else if (daysUntilDue <= 90) barColor = 'bg-yellow-500';
+
+                    return (
+                        <div key={student.id}>
+                            <div className="flex justify-between text-sm font-medium text-gray-600 mb-1">
+                                <span>{student.lastName}, {student.firstName}</span>
+                                <span>Due: {dueDate.toLocaleDateString()} ({Math.ceil(daysUntilDue)} days)</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-6">
+                                <div className={`${barColor} h-6 rounded-full`} style={{ width: `${Math.min(width, 100)}%` }}></div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+const DashboardView = ({ onToggleDashboardMode }) => {
+    const { students } = useStudentData();
+
+    const dashboardStats = useMemo(() => {
+        let allGoals = [];
+        students.forEach(student => {
+            student.goals.forEach(goal => {
+                allGoals.push({ ...goal, studentName: `${student.firstName} ${student.lastName}`, studentId: student.id });
+            });
+        });
+
+        const statsByArea = allGoals.reduce((acc, goal) => {
+            if (!acc[goal.area]) {
+                acc[goal.area] = { total: 0, mastered: 0, onTrack: 0, needsAttention: 0, noData: 0, students: new Set(), studentsNeedingAttention: [] };
+            }
+            const status = getStatus(calculateAverage(goal.progress)).label;
+            acc[goal.area].total++;
+            acc[goal.area].students.add(goal.studentName);
+            if (status === 'Mastered') acc[goal.area].mastered++;
+            else if (status === 'On Track') acc[goal.area].onTrack++;
+            else if (status === 'Needs Attention') {
+                acc[goal.area].needsAttention++;
+                acc[goal.area].studentsNeedingAttention.push({name: goal.studentName, id: student.id});
+            }
+            else acc[goal.area].noData++;
+            return acc;
+        }, {});
+
+        const overall = { total: allGoals.length, mastered: 0, onTrack: 0, needsAttention: 0, noData: 0 };
+        Object.values(statsByArea).forEach(area => {
+            overall.mastered += area.mastered;
+            overall.onTrack += area.onTrack;
+            overall.needsAttention += area.needsAttention;
+            overall.noData += area.noData;
+        });
+        
+        return { overall, byArea: statsByArea };
+
+    }, [students]);
+    
+    const StatCard = ({ label, value, color }) => (
+        <div className="bg-white p-4 rounded-lg shadow">
+            <div className={`text-3xl font-bold ${color}`}>{value}</div>
+            <div className="text-sm text-gray-500">{label}</div>
+        </div>
+    );
+
+    return (
+         <div className="flex-1 flex flex-col p-8 bg-gray-50" style={{maxHeight: '100vh'}}>
+            <div className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
+                <h1 className="text-4xl font-extrabold text-gray-800">Caseload Dashboard</h1>
+                <button onClick={onToggleDashboardMode} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">Exit Dashboard</button>
+            </div>
+
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-700 mb-4">Overall Caseload Health</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <StatCard label="Total Goals" value={dashboardStats.overall.total} color="text-gray-800" />
+                    <StatCard label="% Mastered" value={`${dashboardStats.overall.total > 0 ? Math.round((dashboardStats.overall.mastered / dashboardStats.overall.total) * 100) : 0}%`} color="text-blue-500" />
+                    <StatCard label="% On Track" value={`${dashboardStats.overall.total > 0 ? Math.round((dashboardStats.overall.onTrack / dashboardStats.overall.total) * 100) : 0}%`} color="text-green-500" />
+                    <StatCard label="% Needs Attention" value={`${dashboardStats.overall.total > 0 ? Math.round((dashboardStats.overall.needsAttention / dashboardStats.overall.total) * 100) : 0}%`} color="text-yellow-500" />
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-6 pr-4">
+                <h2 className="text-2xl font-bold text-gray-700">Breakdown by Goal Area</h2>
+                {Object.entries(dashboardStats.byArea).sort(([a],[b]) => a.localeCompare(b)).map(([area, stats]) => (
+                    <div key={area} className="bg-white p-6 rounded-lg shadow">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">{area} ({stats.total} goals)</h3>
+                        <div className="w-full bg-gray-200 rounded-full h-4 mb-4 flex">
+                            <div className="bg-blue-500 h-4 rounded-l-full" style={{width: `${(stats.mastered/stats.total)*100}%`}} title="Mastered"></div>
+                            <div className="bg-green-500 h-4" style={{width: `${(stats.onTrack/stats.total)*100}%`}} title="On Track"></div>
+                            <div className="bg-yellow-500 h-4" style={{width: `${(stats.needsAttention/stats.total)*100}%`}} title="Needs Attention"></div>
+                            <div className="bg-gray-400 h-4 rounded-r-full" style={{width: `${(stats.noData/stats.total)*100}%`}} title="No Data"></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <h4 className="font-semibold text-gray-600 mb-2">Students with this Goal</h4>
+                                <ul className="text-sm text-gray-500 list-disc pl-5">
+                                    {[...stats.students].sort().map(name => <li key={name}>{name}</li>)}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-red-600 mb-2">Students Needing Attention</h4>
+                                {stats.studentsNeedingAttention.length > 0 ? (
+                                    <ul className="text-sm text-red-500 list-disc pl-5">
+                                        {stats.studentsNeedingAttention.map(student => <li key={student.id}>{student.name}</li>)}
+                                    </ul>
+                                ) : <p className="text-sm text-gray-400 italic">None</p>}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const AppContent = () => {
+    const { students } = useStudentData();
+    const [selectedStudentId, setSelectedStudentId] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterGrade, setFilterGrade] = useState('');
+    const [sortBy, setSortBy] = useState('lastName-asc');
+    const [viewMode, setViewMode] = useState('student'); // student, group, timeline, dashboard
+
+    const handleSearchChange = useCallback((e) => setSearchTerm(e.target.value), []);
+    const handleGradeChange = useCallback((e) => setFilterGrade(e.target.value), []);
+    const handleSortChange = useCallback((e) => setSortBy(e.target.value), []);
+    const handleSelectStudent = useCallback((id) => {
+        setSelectedStudentId(id);
+        setViewMode('student');
+    }, []);
+    const handleSetViewMode = useCallback((mode) => setViewMode(mode), []);
+
+    const notifications = useMemo(() => {
+        const today = new Date();
+        return students
+            .filter(s => s.iepDueDate)
+            .map(s => {
+                const dueDate = new Date(s.iepDueDate);
+                const daysUntil = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                return { ...s, daysUntil };
+            })
+            .filter(s => s.daysUntil > 0 && s.daysUntil <= 30)
+            .sort((a, b) => a.daysUntil - b.daysUntil)
+            .map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}`, daysUntil: s.daysUntil }));
+    }, [students]);
+
+    const processedStudents = useMemo(() => {
+        const getStatusPriority = (statusLabel) => {
+            switch (statusLabel) {
+                case 'Needs Attention': return 1;
+                case 'On Track': return 2;
+                case 'Mastered': return 3;
+                default: return 4;
+            }
+        };
+
+        return students
+            .map(student => {
+                const average = calculateAverage(student.goals.flatMap(g => g.progress));
+                const status = getStatus(average);
+                return { ...student, status: status, statusPriority: getStatusPriority(status.label) };
+            })
+            .filter(student => {
+                const nameMatch = `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+                const gradeMatch = filterGrade ? student.grade === parseInt(filterGrade) : true;
+                return nameMatch && gradeMatch;
+            })
+            .sort((a, b) => {
+                switch (sortBy) {
+                    case 'lastName-asc':
+                        return a.lastName.localeCompare(b.lastName);
+                    case 'lastName-desc':
+                        return b.lastName.localeCompare(a.lastName);
+                    case 'iepDate':
+                        if (!a.iepDueDate) return 1;
+                        if (!b.iepDueDate) return -1;
+                        return new Date(a.iepDueDate) - new Date(b.iepDueDate);
+                    case 'status':
+                        return a.statusPriority - b.statusPriority;
+                    default:
+                        return 0;
+                }
+            });
+    }, [students, searchTerm, filterGrade, sortBy]);
+    
+    const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+    useEffect(() => {
+        const isSelectedInList = processedStudents.some(s => s.id === selectedStudentId);
+        if (!isSelectedInList && processedStudents.length > 0) {
+            setSelectedStudentId(processedStudents[0].id);
+        } else if (processedStudents.length === 0) {
+            setSelectedStudentId(null);
+        }
+    }, [processedStudents, selectedStudentId]);
+
+    const CurrentView = () => {
+        switch (viewMode) {
+            case 'group': return <GroupEntryMode onToggleGroupMode={() => handleSetViewMode('student')} />;
+            case 'timeline': return <IEPTimelineView onToggleTimelineMode={() => handleSetViewMode('student')} />;
+            case 'dashboard': return <DashboardView onToggleDashboardMode={() => handleSetViewMode('student')} />;
+            default: return <StudentDetail student={selectedStudent} />;
+        }
+    };
+
+    return (
+        <div className="flex h-screen font-sans bg-white">
+            <StudentListSidebar 
+                students={processedStudents}
+                selectedStudentId={selectedStudentId}
+                onSelectStudent={handleSelectStudent}
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+                filterGrade={filterGrade}
+                onGradeChange={handleGradeChange}
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
+                onToggleGroupMode={() => handleSetViewMode('group')}
+                onToggleTimelineMode={() => handleSetViewMode('timeline')}
+                onToggleDashboardMode={() => handleSetViewMode('dashboard')}
+                notifications={notifications}
+            />
+            <CurrentView />
+        </div>
+    );
+};
+
+
+export default function App() {
+    return (
+        <>
+            <style>{`
+                @keyframes highlight-fade {
+                    0% { background-color: #e0e7ff; }
+                    100% { background-color: #f9fafb; }
+                }
+                .new-progress-entry {
+                    animation: highlight-fade 2s ease-out;
+                }
+                .prose {
+                    max-width: 100%;
+                }
+                .prose h1, .prose h2, .prose h3, .prose strong {
+                    font-weight: bold;
+                    margin-bottom: 0.5em;
+                }
+                 .prose ul {
+                    list-style-type: disc;
+                    padding-left: 1.5em;
+                }
+                .prose li {
+                    margin-bottom: 0.25em;
+                }
+            `}</style>
+            <StudentDataProvider>
+                <AppContent />
+            </StudentDataProvider>
+        </>
+    );
+}
